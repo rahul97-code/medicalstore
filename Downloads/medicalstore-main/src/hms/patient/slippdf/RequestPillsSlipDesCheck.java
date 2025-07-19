@@ -1,0 +1,317 @@
+package hms.patient.slippdf;
+
+import java.awt.Desktop;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Vector;
+import java.util.Map;
+import java.util.LinkedHashMap;
+
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
+import hms.store.gui.StoreMain;  // Ensure this class is available with userName field
+
+public class RequestPillsSlipDesCheck {
+
+    private static Font smallBold = new Font(Font.FontFamily.HELVETICA, 5);
+    private static Font speratorLine = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.RED);
+    private static Font spaceFont = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.DARK_GRAY);
+    private static Font font1 = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.WHITE);
+    private static Font font2 = new Font(Font.FontFamily.HELVETICA, 7, Font.BOLD);
+    private static Font font3 = new Font(Font.FontFamily.HELVETICA, 7f, Font.BOLD);
+    private static Font font4 = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.WHITE);
+    private static Font tokenfont4 = new Font(Font.FontFamily.HELVETICA, 7f, Font.BOLD, BaseColor.WHITE);
+    public static String RESULT = "opdslip1.pdf";
+
+    String mainDir = "";
+    Font font;
+
+    public static void main(String[] args) {
+        try {
+        	RequestPillsSlipDesCheck obj = new RequestPillsSlipDesCheck();
+            obj.readFile();
+            obj.makeDirectory("final_slip");
+
+            // Example dynamic data - map of Department -> List of Items
+            Map<String, DepartmentItems> departmentData = new LinkedHashMap<String, DepartmentItems>();
+
+            // Pharmacy items
+            DepartmentItems pharmacyItems = new DepartmentItems();
+            pharmacyItems.itemName.add("Paracetamol");
+            pharmacyItems.quantity.add("5");
+            pharmacyItems.itemName.add("Ibuprofen");
+            pharmacyItems.quantity.add("2");
+            departmentData.put("Pharmacy", pharmacyItems);
+
+            // Radiology items
+            DepartmentItems radiologyItems = new DepartmentItems();
+            radiologyItems.itemName.add("Aspirin");
+            radiologyItems.quantity.add("10");
+            departmentData.put("Radiology", radiologyItems);
+
+            // Now generate PDF dynamically
+            obj.generateSlipForMultipleDepartments(departmentData, "John Doe","2");
+
+            // Open PDF automatically if supported
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(new File(RESULT));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Generates slips for multiple departments dynamically.
+     * @param departmentData Map of department name to their item data
+     * @param returnedByName Person who returned items (common for all slips)
+     * @throws Exception
+     */
+    public void generateSlipForMultipleDepartments(Map<String, DepartmentItems> departmentData, String returnedByName, String slipIndex) throws Exception {
+        Document document = new Document(PageSize.LETTER);
+        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(RESULT));
+        document.setMargins(0, 0, 50, 0);
+        document.open();
+
+        // Load your font file once
+        BaseFont base = BaseFont.createFont("indian.ttf", BaseFont.WINANSI, BaseFont.EMBEDDED);
+        this.font = new Font(base, 9f);
+
+      
+        for (Map.Entry<String, DepartmentItems> entry : departmentData.entrySet()) {
+            DepartmentItems items = entry.getValue();
+            addSlipToDocument(document, writer, entry.getKey(), items.itemName, items.quantity,
+                    slipIndex, null, null, returnedByName);
+        }
+        document.close();
+    }
+
+    /**
+     * Add single slip for a department
+     * Batch and expiry vectors are ignored now (pass null)
+     */
+    public void addSlipToDocument(Document document, PdfWriter writer, String deptName,
+                                  Vector<String> itemName, Vector<String> quantity, String index,
+                                  Vector<String> itemBatchV, Vector<String> expiryDateV, String person)
+            throws DocumentException, IOException {
+
+        PdfPTable table = new PdfPTable(1);
+        table.getDefaultCell().setBorder(0);
+        table.setWidthPercentage(100);
+        table.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
+
+        float[] tiltelTablCellWidth = {0.1f, 1f};
+        PdfPTable TitleTable = new PdfPTable(tiltelTablCellWidth);
+        TitleTable.getDefaultCell().setBorder(0);
+
+        URL imgURL = RequestPillsSlipDepartment.class.getResource("/icons/rotaryLogo.png");
+        Image image = Image.getInstance(imgURL);
+
+        URL imgURL2 = RequestPillsSlipDepartment.class.getResource("/icons/footer.PNG");
+        Image image2 = Image.getInstance(imgURL2);
+
+        image.scalePercent(30);
+        image.setAbsolutePosition(40, 750);
+
+        PdfPCell logocell = new PdfPCell(image);
+        logocell.setRowspan(3);
+        logocell.setBorder(Rectangle.NO_BORDER);
+        logocell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        logocell.setPaddingRight(5);
+        TitleTable.addCell(logocell);
+
+        PdfPCell namecell = new PdfPCell(new Phrase("ROTARY AMBALA CANCER AND GENERAL HOSPITAL" + "\n", font1));
+        namecell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        namecell.setPaddingBottom(3);
+        namecell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        TitleTable.addCell(namecell);
+
+        PdfPCell addressCell = new PdfPCell(new Phrase("Opp. Dussehra Ground, Ram Bagh Road, Ambala Cantt (Haryana)", font2));
+        addressCell.setPaddingBottom(1);
+        addressCell.setBorder(Rectangle.NO_BORDER);
+        addressCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        TitleTable.addCell(addressCell);
+
+        PdfPCell addressCell2 = new PdfPCell(new Phrase("Telephone No. : 0171-2690009, Mobile No. : 09034056793", font2));
+        addressCell2.setPaddingBottom(2);
+        addressCell2.setBorder(Rectangle.NO_BORDER);
+        addressCell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+        TitleTable.addCell(addressCell2);
+
+        table.addCell(TitleTable);
+
+        PdfPCell cashReceipt = new PdfPCell(new Paragraph("PILLS REQUEST FROM DEPT. RECEIPT ", spaceFont));
+        cashReceipt.setBorder(Rectangle.NO_BORDER);
+        cashReceipt.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cashReceipt.setPaddingBottom(3);
+        table.addCell(cashReceipt);
+
+        float[] opdTablCellWidth = {1f, 2f, 1.2f, 1.2f};
+        PdfPTable opdTable = new PdfPTable(opdTablCellWidth);
+        opdTable.getDefaultCell().setBorder(0);
+
+        PdfPCell tokencell = new PdfPCell(new Phrase("Receipt No. :", font3));
+        tokencell.setBorder(Rectangle.NO_BORDER);
+        tokencell.setPaddingBottom(4);
+
+        PdfPCell tokenNocell = new PdfPCell(new Phrase("" + index, font3));
+        tokenNocell.setBorder(Rectangle.NO_BORDER);
+        tokenNocell.setPaddingBottom(4);
+
+        opdTable.addCell(tokencell);
+        opdTable.addCell(tokenNocell);
+
+        opdTable.addCell(new Phrase("Dept Name : ", font3));
+        opdTable.addCell(new Phrase("" + deptName, font3));
+
+        PdfPCell opdCell = new PdfPCell(opdTable);
+        opdCell.setBorderWidth(0.8f);
+        table.addCell(opdCell);
+
+        long timeInMillis = System.currentTimeMillis();
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTimeInMillis(timeInMillis);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+        PdfPCell space = new PdfPCell(new Paragraph("Date : " + dateFormat.format(cal1.getTime()), font3));
+        space.setBorder(Rectangle.NO_BORDER);
+        space.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        space.setPaddingBottom(6);
+        space.setPaddingTop(4);
+        table.addCell(space);
+
+        // --- Updated examtable with only S.No, Description, Qty ---
+
+        float[] examTableWidth = {0.6f, 3f, 0.7f};
+        PdfPTable examtable = new PdfPTable(examTableWidth);
+
+        examtable.addCell(new Phrase("S. No", font3));
+        examtable.addCell(new Phrase("Description", font3));
+        examtable.addCell(new Phrase("Qty", font3));
+
+        for (int i = 0; i < itemName.size(); i++) {
+            examtable.addCell(new Phrase("" + (i + 1), font3));
+            examtable.addCell(new Phrase("" + itemName.get(i), font3));
+            examtable.addCell(new Phrase("" + quantity.get(i), font3));
+        }
+        table.addCell(examtable);
+
+        PdfPCell username = new PdfPCell(new Paragraph("Generated By : " + StoreMain.userName, font3));
+        username.setBorder(Rectangle.NO_BORDER);
+        username.setHorizontalAlignment(Element.ALIGN_LEFT);
+        username.setPaddingTop(15);
+        PdfPCell person1 = new PdfPCell(new Paragraph("Requested By : " + person, font3));
+        person1.setBorder(Rectangle.NO_BORDER);
+        person1.setHorizontalAlignment(Element.ALIGN_LEFT);
+        person1.setPaddingTop(1);
+        PdfPCell signature = new PdfPCell(new Paragraph("Signature", font3));
+        signature.setBorder(Rectangle.NO_BORDER);
+        signature.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        signature.setPaddingTop(15);
+        table.addCell(username);
+        table.addCell(person1);
+        table.addCell(signature);
+        table.addCell(image2);
+
+//        float[] table2w = {1f, 0.1f, 1f};
+//        PdfPTable table2 = new PdfPTable(table2w);
+//        table2.getDefaultCell().setBorder(0);
+//        table2.setWidthPercentage(94);
+//
+//        PdfPCell call1 = new PdfPCell(table);
+//        call1.setBorder(Rectangle.NO_BORDER);
+//        call1.setHorizontalAlignment(Element.ALIGN_CENTER);
+//
+//        table2.addCell(call1);
+//
+//        PdfPCell call3 = new PdfPCell(
+//                new Paragraph(
+//                        "   - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - -   ",
+//                        speratorLine));
+//        call3.setBorder(Rectangle.NO_BORDER);
+//        call3.setRotation(270);
+//        call3.setPaddingRight(7);
+//        call3.setPaddingLeft(5);
+//        call3.setHorizontalAlignment(Element.ALIGN_CENTER);
+//
+//        table2.addCell(call3);
+//
+//        PdfPCell cell2 = new PdfPCell(table);
+//        cell2.setBorder(Rectangle.NO_BORDER);
+//        cell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+//        table2.addCell(cell2);
+
+        document.add(table);
+
+        // Add some vertical space between slips
+        document.add(new Paragraph("\n\n\n"));
+    }
+
+    public void makeDirectory(String slipNo) {
+        new File("DeptIssuePillSlips").mkdir();
+        RESULT = "DeptIssuePillSlips/" + slipNo + ".pdf";
+    }
+
+    public void readFile() {
+        // The name of the file to open.
+        String fileName = "data.mdi";
+
+        // This will reference one line at a time
+        String line = null;
+
+        try {
+            // FileReader reads text files in the default encoding.
+            FileReader fileReader = new FileReader(fileName);
+
+            // Always wrap FileReader in BufferedReader.
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String str = null;
+            boolean fetch = true;
+            while ((line = bufferedReader.readLine()) != null && fetch) {
+                str = line;
+                fetch = false;
+            }
+            String data[] = new String[22];
+            int i = 0;
+            for (String retval : str.split("@")) {
+                data[i] = retval;
+                i++;
+            }
+            mainDir = data[1];
+            // open array removed as not used here
+
+            // Always close files.
+            bufferedReader.close();
+        } catch (IOException ex) {
+            System.out.println("Error reading file '" + fileName + "'");
+        }
+    }
+
+    /**
+     * Helper class to hold items data for a department
+     */
+    public static class DepartmentItems {
+        public Vector<String> itemName = new Vector<String>();
+        public Vector<String> quantity = new Vector<String>();
+     
+    }
+}

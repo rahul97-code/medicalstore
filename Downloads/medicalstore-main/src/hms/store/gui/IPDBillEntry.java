@@ -1,4 +1,5 @@
 package hms.store.gui;
+import hms.admin.gui.AdminMain;
 import hms.doc.scanning.DocScanning;
 import hms.doctor.database.DoctorDBConnection;
 import hms.formula.MSIPDPriceFormula;
@@ -644,11 +645,17 @@ public class IPDBillEntry extends JDialog implements KeyListener {
 
 		JButton btnNewButton_1 = new JButton("Generate Bill");
 		btnNewButton_1.addActionListener(new ActionListener() {
-			private String item_batch;
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 			
+//				System.out.println(owner.getClass().getName()+"  gsvxuavsxv");
+				if (owner instanceof AdminMain) {((AdminMain) owner).showDocScanning(owner); }
+				else if (owner instanceof StoreMain) { ((StoreMain) owner).showDocScanning(owner); }
+
+				
+				if(true) {
+					return;
+				}
 
 				if (patientNameTF.getText().toString().equals("")) {
 					JOptionPane.showMessageDialog(null,
@@ -898,7 +905,7 @@ public class IPDBillEntry extends JDialog implements KeyListener {
 
 					}
 				}
-				openOrShowDocScanning(owner);
+//				openOrShowDocScanning(owner);
 
 
 			}

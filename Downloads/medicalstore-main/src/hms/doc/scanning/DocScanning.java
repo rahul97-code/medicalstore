@@ -125,15 +125,6 @@ public class DocScanning extends JDialog{
 		setIconImage(new ImageIcon(DocScanning.class.getResource("/icons/scanner.png")).getImage());
 
 
-		addMouseListener(new MouseAdapter() {
-		    @Override
-		    public void mousePressed(MouseEvent e) {
-		        setAlwaysOnTop(true);
-		        toFront();
-		        requestFocus();
-		        setAlwaysOnTop(false);
-		    }
-		});
 
 		imagesPanel = new JPanel();
 		imagesPanel.setLayout(new BoxLayout(imagesPanel, BoxLayout.X_AXIS));
@@ -235,8 +226,7 @@ public class DocScanning extends JDialog{
 				String localPath=scannedFolder+"/"+scannedPdfFolder+"/"+billId+".pdf";
 				String destiPath=billId+"/"+billId+".pdf";
 				createPDFFromImages(scannedFolder, localPath);
-				SmbFileUploader.uploadInThread(localPath,destiPath,billId);
-				releaseResources();
+			    SmbFileUploader.uploadAllPdfsInThread(scannedFolder+"/"+scannedPdfFolder);
 
 				imagesPanel.removeAll();
 				imagesPanel.revalidate();

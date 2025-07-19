@@ -43,7 +43,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class StoreMain extends JFrame {
-
+	private DocScanning docScanning;
 	private JPanel contentPane;
 	static String OS;
 	public static String id;
@@ -52,6 +52,7 @@ public class StoreMain extends JFrame {
 	public static String item_master_update_access="";
 	public static String update_item_access="";
 	public static String collection_report_access="";
+
 
 	/**
 	 * Launch the application.
@@ -79,10 +80,10 @@ public class StoreMain extends JFrame {
 			public void windowOpened(WindowEvent e) {
 				StoreAccountDBConnection storeAccountDBConnection = new StoreAccountDBConnection();
 				ResultSet rs=storeAccountDBConnection.saveActivity(StoreMain.userName,StoreMain.userID,"Store");
-				
+
 				try {
 					while(rs.next()) {
-						 id=rs.getObject(1).toString();
+						id=rs.getObject(1).toString();
 					}
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
@@ -94,12 +95,12 @@ public class StoreMain extends JFrame {
 			public void windowClosing(WindowEvent e) {
 				StoreAccountDBConnection storeAccountDBConnection = new StoreAccountDBConnection();
 				storeAccountDBConnection.closeActivity(id);
-				
+
 
 				storeAccountDBConnection.closeConnection();
 			}
 		});
-		
+
 		OS=System.getProperty("os.name").toLowerCase();
 
 		StoreMain.collection_report_access=collection_report_access_1;
@@ -174,7 +175,7 @@ public class StoreMain extends JFrame {
 
 		JMenu mnOutdoorPatient = new JMenu("Suppliers");
 		if(StoreMain.update_item_access.equals("1"))
-		mnOutdoorPatient.setEnabled(true);
+			mnOutdoorPatient.setEnabled(true);
 		else 
 			mnOutdoorPatient.setEnabled(false);		
 		mnOutdoorPatient.setIcon(new ImageIcon(StoreMain.class.getResource("/icons/officer.png")));
@@ -240,10 +241,10 @@ public class StoreMain extends JFrame {
 		JMenu mnInsuranceHead = new JMenu("Insurance Head");
 		if(StoreMain.update_item_access.equals("1"))
 			mnInsuranceHead.setEnabled(true);
-			else {
-				mnInsuranceHead.setEnabled(false);
-			}
-		
+		else {
+			mnInsuranceHead.setEnabled(false);
+		}
+
 		mnInsuranceHead.setIcon(new ImageIcon(StoreMain.class.getResource("/icons/EXPENSE.PNG")));
 		mnInsuranceHead.setFont(new Font("Tahoma", Font.BOLD, 15));
 		menuBar.add(mnInsuranceHead);
@@ -336,7 +337,7 @@ public class StoreMain extends JFrame {
 		JMenuItem mntmCancelReport = new JMenuItem("Cancel Report");
 		mntmCancelReport.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
+
 			}
 		});
 		mntmCancelReport.setFont(new Font("Tahoma", Font.BOLD, 14));
@@ -384,12 +385,12 @@ public class StoreMain extends JFrame {
 			}
 		});
 		mntmNewInvoice.setFont(new Font("Tahoma", Font.BOLD, 14));
-		
+
 		JMenu mnCancelRecieptReq = new JMenu("Cancel Reciept");
 		mnCancelRecieptReq.setIcon(new ImageIcon(StoreMain.class.getResource("/icons/CANCEL.PNG")));
 		mnCancelRecieptReq.setFont(new Font("Dialog", Font.BOLD, 15));
 		menuBar.add(mnCancelRecieptReq);
-		
+
 		JMenuItem mntmCancelBillRequest = new JMenuItem("OPD Cancel Bill Request");
 		mntmCancelBillRequest.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -400,14 +401,14 @@ public class StoreMain extends JFrame {
 		});
 		mntmCancelBillRequest.setFont(new Font("Dialog", Font.BOLD, 14));
 		mnCancelRecieptReq.add(mntmCancelBillRequest);
-		
+
 		JMenuItem mntmIpdCancelBill = new JMenuItem("IPD Cancel Bill Request");
 		mntmIpdCancelBill.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				IPDReturnBillForm  IPDReturnBillForm=new IPDReturnBillForm();
 				IPDReturnBillForm.setVisible(true);	
 				IPDReturnBillForm.setModal(true);
-				}
+			}
 		});
 		mntmIpdCancelBill.setFont(new Font("Dialog", Font.BOLD, 14));
 		mnCancelRecieptReq.add(mntmIpdCancelBill);
@@ -415,10 +416,10 @@ public class StoreMain extends JFrame {
 		JMenu mnPo = new JMenu("Indent");
 		if(StoreMain.update_item_access.equals("1"))
 			mnPo.setEnabled(true);
-			else {
-				mnPo.setEnabled(false);
-			}
-		
+		else {
+			mnPo.setEnabled(false);
+		}
+
 		mnPo.setIcon(new ImageIcon(StoreMain.class.getResource("/icons/categories.png")));
 		mnPo.setFont(new Font("Tahoma", Font.BOLD, 15));
 		menuBar.add(mnPo);
@@ -446,36 +447,34 @@ public class StoreMain extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				BillBrowser newIssuedForm=new BillBrowser(StoreMain.this,StoreMain.userID,"store");
-//				newIssuedForm.setModal(true);
+				//				newIssuedForm.setModal(true);
 				newIssuedForm.setVisible(true);
 			}
 		});
 		mntmNewIssueForm.setFont(new Font("Tahoma", Font.BOLD, 14));
-		
-	    mntmNewIssueForm = new JMenuItem("Slip Scanner");
+
+		mntmNewIssueForm = new JMenuItem("Slip Scanner");
 		mnItemIssue.add(mntmNewIssueForm);
 		mntmNewIssueForm.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				DocScanning docScanning = new DocScanning(StoreMain.this);
-				docScanning.setModal(true);
-				docScanning.setVisible(true);
+				showDocScanning(StoreMain.this);
 			}
 		});
 		mntmNewIssueForm.setFont(new Font("Tahoma", Font.BOLD, 14));
-		
+
 		JMenuItem mntmIssueToDept = new JMenuItem("Issue To Dept.");
 		mntmIssueToDept.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-//				NewIssuedForm dialog = new NewIssuedForm();
-//				dialog.setVisible(true);
+				//				NewIssuedForm dialog = new NewIssuedForm();
+				//				dialog.setVisible(true);
 				BillBrowserPillsReq dialog = new BillBrowserPillsReq(StoreMain.this,StoreMain.userID,"store");
 				dialog.setVisible(true);
 			}
 		});
 		mntmIssueToDept.setFont(new Font("Dialog", Font.BOLD, 14));
 		mnItemIssue.add(mntmIssueToDept);
-		
+
 		JMenuItem mntmReturnFromDept = new JMenuItem("Return From Dept.");
 		mntmReturnFromDept.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -488,10 +487,10 @@ public class StoreMain extends JFrame {
 		JMenu mnInvoice1 = new JMenu("Invoice");
 		if(StoreMain.update_item_access.equals("1"))
 			mnInvoice1.setEnabled(true);
-			else {
-				mnInvoice1.setEnabled(false);
-			}
-	
+		else {
+			mnInvoice1.setEnabled(false);
+		}
+
 		mnInvoice1.setIcon(new ImageIcon(StoreMain.class.getResource("/icons/PRODUCT.PNG")));
 		mnInvoice1.setFont(new Font("Tahoma", Font.BOLD, 15));
 		menuBar.add(mnInvoice1);
@@ -558,9 +557,9 @@ public class StoreMain extends JFrame {
 		JMenu mnPo1 = new JMenu("Purchase Order");
 		if(StoreMain.update_item_access.equals("1"))
 			mnPo1.setEnabled(true);
-			else {
-				mnPo1.setEnabled(false);
-			}
+		else {
+			mnPo1.setEnabled(false);
+		}
 		mnPo1.setIcon(new ImageIcon(StoreMain.class.getResource("/icons/PRODUCT.PNG")));
 		mnPo1.setFont(new Font("Tahoma", Font.BOLD, 15));
 		menuBar.add(mnPo1);
@@ -793,9 +792,9 @@ public class StoreMain extends JFrame {
 		JMenu mnItems1 = new JMenu("Items");
 		if(StoreMain.update_item_access.equals("1"))
 			mnItems1.setEnabled(true);
-			else {
-				mnItems1.setEnabled(false);
-			}
+		else {
+			mnItems1.setEnabled(false);
+		}
 		mnItems1.setIcon(new ImageIcon(StoreMain.class.getResource("/icons/restore.gif")));
 		mnItems1.setFont(new Font("Tahoma", Font.BOLD, 15));
 		menuBar.add(mnItems1);
@@ -875,5 +874,17 @@ public class StoreMain extends JFrame {
 
 		return (OS.indexOf("win") >= 0);
 
+	}
+
+	public void showDocScanning(JFrame owner) {
+		if (docScanning == null || !docScanning.isDisplayable()) {
+			docScanning = new DocScanning(owner);
+			docScanning.setVisible(true);
+		} else {
+			docScanning.setAlwaysOnTop(true);
+			docScanning.toFront();
+			docScanning.requestFocus();
+			docScanning.setAlwaysOnTop(false);
+		}
 	}
 }

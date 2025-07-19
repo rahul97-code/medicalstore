@@ -1,110 +1,146 @@
 package hms.doc.scanning;
+
 import jcifs.smb.*;
 import java.io.*;
 import javax.swing.*;
-
 import hms.doc.scanning.database.DocScanDBConnection;
+import hms.main.Developing_environment;
 
 public class SmbFileUploader implements Runnable {
 
-    private static final String SMB_SERVER = "192.168.1.138";  // Samba server IP
-    private static final String SMB_SHARE = "/data/MS/ScannedBillSlips/";        // Share name
+	private static String SMB_SERVER = null;  // Samba server IP
+	private static final String SMB_SHARE = "/data/MS/ScannedBillSlips/";  // Share name
 
-    private static String smbUsername = "hospital";
-    private static String smbPassword = "rotaryhospital";
+	private static String smbUsername = "hospital";
+	private static String smbPassword = "rotaryhospital";
 
-    private final String localFilePath;
-    private final String remoteRelativePath;
-    private final String billId;
-    
-    public static void main(String[] args) {
-        String localFile = "opdslip.pdf";
-        String remotePath = "MS/DailyScannedSlips/" + new File(localFile).getName();
+	private final File localFolder;
 
+	public static void main(String[] args) {
+		uploadAllPdfsInThread("ScannedSlips/ScannedPdf/");
+	}
 
-        uploadInThread(localFile, remotePath,"");
-    }
+	public SmbFileUploader(File localFolder) {
+		if (new Developing_environment().ACTIVE) {
+			SMB_SERVER = "192.51.11.206";
+			smbUsername = null;
+			smbPassword = null;
+		}
 
- 
-    public SmbFileUploader(String localFilePath, String remoteRelativePath,String billId) {
-        this.localFilePath = localFilePath;
-        this.remoteRelativePath = remoteRelativePath;
-        this.billId = billId;
-    }
+		this.localFolder = localFolder;
+		//        System.out.println("Initialized with folder: " + this.localFolder.getAbsolutePath());
+	}
 
-    @Override
-    public void run() {
-        InputStream in = null;
-        OutputStream out = null;
+	@Override
+	public void run() {
+		//        System.out.println("Looking for PDFs in folder: " + localFolder.getAbsolutePath());
 
-        try {
-            File file = new File(localFilePath);
-            if (!file.exists()) {
-                showError("Local file not found: " + localFilePath);
-                return;
-            }
+		if (!localFolder.exists() || !localFolder.isDirectory()) {
+			showError("Local folder not found: " + localFolder.getAbsolutePath());
+			return;
+		}
 
-            in = new FileInputStream(file);
+		File[] pdfFiles = localFolder.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.toLowerCase().endsWith(".pdf");
+			}
+		});
 
-            NtlmPasswordAuthentication auth =
-                new NtlmPasswordAuthentication(null, smbUsername, smbPassword);
+		if (pdfFiles == null) {
+			System.out.println("listFiles() returned null — maybe no permission to read the folder.");
+			return;
+		}
 
-            String smbFolderUrl = "smb://" + SMB_SERVER + SMB_SHARE;
-            String smbFileUrl = smbFolderUrl + remoteRelativePath;
+		if (pdfFiles.length == 0) {
+			System.out.println("No PDF files found in: " + localFolder.getAbsolutePath());
+			return;
+		}
 
-            System.out.println("Uploading to: " + smbFileUrl);
+		System.out.println("Found " + pdfFiles.length + " PDF file(s) in: " + localFolder.getAbsolutePath());
 
-            SmbFile smbFile = new SmbFile(smbFileUrl, auth);
-            SmbFile parentDir = new SmbFile(smbFile.getParent(), auth);
+		for (int i = 0; i < pdfFiles.length; i++) {
+			File pdfFile = pdfFiles[i];
+			String fileNameWithoutExt = pdfFile.getName().replaceFirst("[.][^.]+$", "");
+			String remoteRelativePath = fileNameWithoutExt + "/" + pdfFile.getName();
 
-            if (!parentDir.exists()) {
-                System.out.println("Creating remote directory: " + parentDir.getPath());
-                parentDir.mkdirs();
-            } else if (!parentDir.isDirectory()) {
-                throw new IOException("Remote path exists but is not a directory: " + parentDir.getPath());
-            } else {
-                System.out.println("Remote directory exists: " + parentDir.getPath());
-            }
+			boolean uploaded = uploadSingleFile(pdfFile, remoteRelativePath, fileNameWithoutExt);
 
-            out = new SmbFileOutputStream(smbFile);
+			if (uploaded) {
+				if (pdfFile.delete()) {
+					System.out.println("Deleted local file: " + pdfFile.getAbsolutePath());
+				} else {
+					System.err.println("Failed to delete local file: " + pdfFile.getAbsolutePath());
+				}
+			}
+		}
+	}
 
-            byte[] buffer = new byte[32768];
-            int bytesRead;
+	private boolean uploadSingleFile(File file, String remoteRelativePath, String billId) {
+		InputStream in = null;
+		OutputStream out = null;
 
-            System.out.println("Start uploading file...");
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
+		try {
+			in = new FileInputStream(file);
 
-            System.out.println("File uploaded successfully.");
-            DocScanDBConnection db=new DocScanDBConnection();
+			NtlmPasswordAuthentication auth =
+					new NtlmPasswordAuthentication(null, smbUsername, smbPassword);
+
+			String smbFolderUrl = "smb://" + SMB_SERVER + SMB_SHARE;
+			String smbFileUrl = smbFolderUrl + remoteRelativePath;
+
+			System.out.println("Uploading to: " + smbFileUrl);
+
+			SmbFile smbFile = new SmbFile(smbFileUrl, auth);
+			SmbFile parentDir = new SmbFile(smbFile.getParent(), auth);
+
+			if (!parentDir.exists()) {
+				System.out.println("Creating remote directory: " + parentDir.getPath());
+				parentDir.mkdirs();
+			}
+
+			out = new SmbFileOutputStream(smbFile);
+
+			byte[] buffer = new byte[32768];
+			int bytesRead;
+
+			System.out.println("Start uploading file: " + file.getName());
+			while ((bytesRead = in.read(buffer)) != -1) {
+				out.write(buffer, 0, bytesRead);
+			}
+
+			System.out.println("File uploaded successfully: " + file.getName());
+
+			DocScanDBConnection db = new DocScanDBConnection();
 			db.updateScannedBillFlag(billId);
 			db.closeConnection();
 
+			return true;
 
-        } catch (Exception e) {
-            final String errorMessage = "Error uploading file:\n" + e.getMessage();
-            System.err.println(errorMessage);
-            e.printStackTrace();
-            showError(errorMessage);
-        } finally {
-            try { if (in != null) in.close(); } catch (IOException ignored) {}
-            try { if (out != null) out.close(); } catch (IOException ignored) {}
-        }
-    }
+		} catch (Exception e) {
+			final String errorMessage = "Error uploading file: " + file.getName() + "\n" + e.getMessage();
+			System.err.println(errorMessage);
+			e.printStackTrace();
+			showError(errorMessage);
+			return false;
+		} finally {
+			try { if (in != null) in.close(); } catch (IOException ignored) {}
+			try { if (out != null) out.close(); } catch (IOException ignored) {}
+		}
+	}
 
-    public static void uploadInThread(String localFilePath, String remoteRelativePath,String billId) {
-        SmbFileUploader uploader = new SmbFileUploader(localFilePath, remoteRelativePath,billId);
-        new Thread(uploader).start();
-    }
+	public static void uploadAllPdfsInThread(String folderName) {
+		File folder = new File(folderName);
+		SmbFileUploader uploader = new SmbFileUploader(folder);
+		new Thread(uploader).start();
+	}
 
-    private void showError(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                JOptionPane.showMessageDialog(null, message, "Upload Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-    }
-
-   
+	private void showError(final String message) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				JOptionPane.showMessageDialog(null, message, "Upload Error", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+	}
 }

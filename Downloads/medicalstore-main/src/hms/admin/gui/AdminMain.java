@@ -1,6 +1,7 @@
 package hms.admin.gui;
 
 import hms.AutoUpdate.NewUpdates;
+import hms.doc.scanning.DocScanning;
 import hms.formula.manipulation.FormulaMaster;
 import hms.gl.account.ReceptionUsersReport;
 import hms.insurance.gui.AddInsuranceType;
@@ -98,7 +99,7 @@ import java.awt.event.WindowEvent;
 public class AdminMain extends JFrame {
 
 	private JPanel contentPane;
-
+	private DocScanning docScanning;
 	public static String id;
 	public static String userName="";
 	public static String userID="";
@@ -988,8 +989,18 @@ public class AdminMain extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				BillBrowser newIssuedForm=new BillBrowser(AdminMain.this,"","admin");
-				newIssuedForm.setModal(true);
+//				newIssuedForm.setModal(true);
 				newIssuedForm.setVisible(true);
+			}
+		});
+		mntmNewIssueForm.setFont(new Font("Tahoma", Font.BOLD, 14));
+		
+		mntmNewIssueForm = new JMenuItem("Slip Scanner");
+		mnItemIssue.add(mntmNewIssueForm);
+		mntmNewIssueForm.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				showDocScanning(AdminMain.this);
 			}
 		});
 		mntmNewIssueForm.setFont(new Font("Tahoma", Font.BOLD, 14));
@@ -1093,6 +1104,17 @@ public class AdminMain extends JFrame {
 		lblNewLabel.setBounds(0,-40,width,height);
 		}
 		contentPane.add(lblNewLabel);
+	}
+	public void showDocScanning(JFrame owner) {
+		if (docScanning == null || !docScanning.isDisplayable()) {
+			docScanning = new DocScanning(owner);
+			docScanning.setVisible(true);
+		} else {
+			docScanning.setAlwaysOnTop(true);
+			docScanning.toFront();
+			docScanning.requestFocus();
+			docScanning.setAlwaysOnTop(false);
+		}
 	}
 	public static boolean isWindows() {
 

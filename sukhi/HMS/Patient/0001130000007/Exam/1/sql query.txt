@@ -1,0 +1,4 @@
+SELECT * FROM `opd_entery` a where 2= (select count(distinct(opd_id)) from `opd_entery` where opd_id<=a.opd_id and p_name='abc') and p_name='abc'
+
+
+SELECT * FROM `opd_entery` a where 2= (select count(distinct(opd_id)) from `opd_entery` where opd_id<=a.opd_id and opd_date='2013-11-15' and opd_doctor='sukhpal saini' ) and opd_doctor='sukhpal saini' and opd_date='2013-11-15'

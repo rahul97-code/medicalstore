@@ -1,0 +1,328 @@
+import hms.patient.gui.PatientBrowser;
+import hms.patient.slippdf.ExamSlippdf;
+
+import java.awt.Toolkit;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
+
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.Barcode128;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
+
+public class abcd {
+    
+	private static Font smallBold = new Font(Font.FontFamily.HELVETICA, 8);
+	private static Font spaceFont = new Font(Font.FontFamily.HELVETICA, 2);
+	private static Font font1 = new Font(Font.FontFamily.HELVETICA, 17,Font.BOLD,BaseColor.WHITE);
+	private static Font font2 = new Font(Font.FontFamily.HELVETICA, 8,Font.BOLD);
+	private static Font font3 = new Font(Font.FontFamily.HELVETICA, 8.5f,Font.BOLD);
+	private static Font font4 = new Font(Font.FontFamily.HELVETICA, 9,Font.BOLD,BaseColor.WHITE);
+
+    public static final String RESULT = "opdslip.pdf";
+
+    public static void main(String[] args)
+        throws DocumentException, IOException {
+
+        Document document = new Document();
+        PdfWriter wr = PdfWriter.getInstance(document, new FileOutputStream(RESULT));
+        document.setPageSize(PageSize.LETTER);
+        document.setMargins(0, 0, 10, 0);
+        document.open();    
+       
+        PdfPTable table = new PdfPTable(1);
+        table.getDefaultCell().setBorder(0);
+        table.setWidthPercentage(90);
+        table.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
+        
+        float[] tiltelTablCellWidth = {0.1f,1f};
+        PdfPTable TitleTable = new PdfPTable(tiltelTablCellWidth);
+        TitleTable.getDefaultCell().setBorder(0);
+       
+        java.net.URL imgURL = abcd.class.getResource("/icons/rotaryLogo.png");
+		Image image = Image.getInstance(imgURL);
+		
+		image.scalePercent(50);
+		image.setAbsolutePosition(40, 750);
+
+        PdfPCell logocell = new PdfPCell(image);
+        logocell.setRowspan(3);
+        logocell.setBorder(PdfPCell.NO_BORDER);
+        logocell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        logocell.setPaddingRight(5);
+        TitleTable.addCell(logocell);
+        
+        PdfPCell namecell = new PdfPCell(new Phrase("ROTARY AMBALA CANCER AND GENRAL HOSPITAL"+"\n",font1));
+        namecell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        namecell.setPaddingBottom(5);
+        namecell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        TitleTable.addCell(namecell);
+        
+        PdfPCell addressCell = new PdfPCell(new Phrase("Opp. Dussehra Ground, Ram Bagh Road, Ambala Cantt (Haryana)", font2));
+        addressCell.setPaddingBottom(2);
+        addressCell.setBorder(PdfPCell.NO_BORDER);
+        addressCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        TitleTable.addCell(addressCell);
+        
+        PdfPCell addressCell2 = new PdfPCell(new Phrase("Telephone No. : 0171-2690009, Mobile No. : 09813334999", font2));
+        addressCell2.setPaddingBottom(5);
+        addressCell2.setBorder(PdfPCell.NO_BORDER);
+        addressCell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+        TitleTable.addCell(addressCell2);
+        
+        table.addCell(TitleTable);
+      
+        PdfPTable doctorTable = new PdfPTable(2);
+        doctorTable.getDefaultCell().setBorder(0);
+       
+        for (int i = 0; i < 20; i++) {
+        	 doctorTable.addCell(new Phrase(" a  "+i, smallBold));
+		}
+        PdfPCell doctorCell = new PdfPCell(doctorTable);
+        doctorCell.setPaddingTop(5);
+        doctorCell.setPaddingBottom(5);
+        doctorCell.setBorderWidth(0.8f);
+        table.addCell(doctorCell);
+        
+        
+        PdfPCell spaceCell = new PdfPCell(new Paragraph("    ", spaceFont));
+        spaceCell.setBorder(PdfPCell.NO_BORDER);
+        spaceCell.setPaddingTop(1);
+        table.addCell(spaceCell);
+//        
+        PdfPTable opdTable = new PdfPTable(7);
+        opdTable.getDefaultCell().setBorder(0);
+        
+        PdfPCell tokencell = new PdfPCell(new Phrase("Token No."+"\n",font4));
+        tokencell.setBorder(PdfPCell.NO_BORDER);
+        tokencell.setPaddingBottom(5);
+        tokencell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        
+        PdfPCell tokenNocell = new PdfPCell(new Phrase(""+"\n",font4));
+        tokenNocell.setBorder(PdfPCell.NO_BORDER);
+        tokenNocell.setPaddingBottom(5);
+        tokenNocell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        
+        opdTable.addCell(tokencell);
+        opdTable.addCell(tokenNocell);
+        
+        opdTable.addCell(new Phrase("OPD Receipt No. :", font3));
+        opdTable.addCell(new Phrase("", font3));
+        
+        PdfContentByte cb = wr.getDirectContent();
+        Barcode128 codeEAN = new Barcode128();
+        codeEAN.setCode("0001130000012");
+        codeEAN.setX(1.5f);
+        codeEAN.setN(1.5f);
+        codeEAN.setSize(12f);
+        codeEAN.setBaseline(-1f);
+        codeEAN.setGuardBars(true);
+        codeEAN.setBarHeight(20f);
+        PdfPCell barcodecell = new PdfPCell(codeEAN.createImageWithBarcode(cb, null, null));
+        barcodecell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        barcodecell.setPaddingRight(5);
+        barcodecell.setBorder(PdfPCell.NO_BORDER);
+        barcodecell.setColspan(2);
+        barcodecell.setRowspan(2);
+        opdTable.addCell(barcodecell);
+        opdTable.addCell(new Phrase("", font3));
+       
+        
+        opdTable.addCell(new Phrase("Patient :", font3));
+        opdTable.addCell(new Phrase("", font3));
+        
+        PdfPCell agecell = new PdfPCell(new Phrase(""+"\n",font3));
+        agecell.setPaddingBottom(5);
+        agecell.setBorder(PdfPCell.NO_BORDER);
+        agecell.setColspan(4);
+        opdTable.addCell(new Phrase("Age :", font3));
+        opdTable.addCell(agecell);
+       
+        PdfPCell consultantcell = new PdfPCell(new Phrase(""+"\n",font3));
+        consultantcell.setPaddingBottom(5);
+        consultantcell.setBorder(PdfPCell.NO_BORDER);
+        consultantcell.setColspan(2);
+        opdTable.addCell(new Phrase("Consultant :", font3));
+        opdTable.addCell(consultantcell);
+        opdTable.addCell(new Phrase("", font3));
+       
+        opdTable.addCell(new Phrase("Amt Received :", font3));
+        opdTable.addCell(new Phrase("", font3));
+        opdTable.addCell(new Phrase("Signature", font3));
+       
+        opdTable.addCell(new Phrase("", font3));
+        opdTable.addCell(new Phrase("", font3));
+        opdTable.addCell(new Phrase("", font3));
+        opdTable.addCell(new Phrase("", font3));
+        PdfPCell opdCell = new PdfPCell(opdTable);
+        opdCell.setBorderWidth(0.8f);
+        table.addCell(opdCell);
+        
+        
+        float[] facilityTablCellWidth = {0.3f,1f};
+        PdfPTable mainFacilityTable = new PdfPTable(facilityTablCellWidth);
+        
+        
+        PdfPTable facilityTable = new PdfPTable(1);
+        facilityTable.getDefaultCell().setBorder(0);
+       
+        PdfPCell facilitiesTitleCell = new PdfPCell(new Phrase("FACILITIES", font2));
+        facilitiesTitleCell.setBorder(PdfPCell.NO_BORDER);
+        facilitiesTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        
+        facilityTable.addCell(facilitiesTitleCell);
+        facilityTable.addCell(new Phrase(12,"* Color Doppler Ultra Sound", smallBold));
+        facilityTable.addCell(new Phrase("* Mammography", smallBold));
+        facilityTable.addCell(new Phrase("* X-Ray Machine", smallBold));
+        facilityTable.addCell(new Phrase("* ECHO", smallBold));
+        facilityTable.addCell(new Phrase("* Angiography & Angioplasty", smallBold));
+        facilityTable.addCell(new Phrase("* TMT", smallBold));
+        facilityTable.addCell(new Phrase("* E.C.G.", smallBold));
+        facilityTable.addCell(new Phrase("* Computerized Lab", smallBold));
+        facilityTable.addCell(new Phrase("* Ortho Surgery (Trauma, Spine,", smallBold));
+        facilityTable.addCell(new Phrase("  Arthroscopy, Knee Joint", smallBold));
+        facilityTable.addCell(new Phrase("  Replacement)", smallBold));
+        facilityTable.addCell(new Phrase("* Ventilator", smallBold));
+        facilityTable.addCell(new Phrase("* Defebrilator", smallBold));
+        facilityTable.addCell(new Phrase("* Spirometry (Lung Function Test)", smallBold));
+        facilityTable.addCell(new Phrase("* Audiometery & Speech Therapy", smallBold));
+        
+        facilityTable.addCell(new Phrase(" ", smallBold));
+        
+        PdfPTable empanelledTable = new PdfPTable(1);
+        empanelledTable.getDefaultCell().setBorder(0);
+        PdfPCell empanelledTitleCell = new PdfPCell(new Phrase("EMPANELLED WITH", font2));
+        empanelledTitleCell.setBorder(PdfPCell.NO_BORDER);
+        empanelledTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        
+        empanelledTable.addCell(empanelledTitleCell);
+        empanelledTable.addCell(new Phrase("* BSNL Employee", smallBold));
+        empanelledTable.addCell(new Phrase("* BPL Smart Card Holder", smallBold));
+        empanelledTable.addCell(new Phrase("* For Cashless Treatment", font3));
+        empanelledTable.addCell(new Phrase(" ", smallBold));
+        empanelledTable.addCell(new Phrase(" ", smallBold));
+        empanelledTable.addCell(new Phrase(" ", smallBold));
+        empanelledTable.addCell(new Phrase(" ", smallBold));
+       
+       
+        PdfPCell facilityCell = new PdfPCell(facilityTable);
+        facilityCell.setPaddingBottom(5);
+        facilityCell.setPaddingLeft(2);
+        facilityCell.setBorderWidth(0.8f);
+        mainFacilityTable.addCell(facilityCell);
+        
+        
+        PdfPCell facilitiesCell2 = new PdfPCell(new Phrase("", font2));
+        facilitiesCell2.setBorder(PdfPCell.NO_BORDER);
+        facilitiesCell2.setPaddingBottom(5);
+        facilitiesCell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+        mainFacilityTable.addCell(facilitiesCell2);
+        
+        PdfPCell emptyCell = new PdfPCell(new Phrase(" ", font2));
+        emptyCell.setBorder(PdfPCell.NO_BORDER);
+        emptyCell.setPaddingBottom(5);
+        emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        mainFacilityTable.addCell(emptyCell);
+        
+        
+        PdfPCell emptyCell2 = new PdfPCell(new Phrase("", font2));
+        emptyCell2.setBorder(PdfPCell.NO_BORDER);
+        emptyCell2.setPaddingBottom(5);
+        emptyCell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+        mainFacilityTable.addCell(emptyCell2);
+        
+
+        PdfPCell empanelledCell = new PdfPCell(empanelledTable);
+        empanelledCell.setPaddingBottom(5);
+        empanelledCell.setPaddingLeft(2);
+        empanelledCell.setBorderWidth(0.8f);
+        mainFacilityTable.addCell(empanelledCell);
+        
+        
+        PdfPCell empanelledCell2 = new PdfPCell(new Phrase("", font2));
+        empanelledCell2.setBorder(PdfPCell.NO_BORDER);
+        empanelledCell2.setPaddingBottom(10);
+        empanelledCell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+        mainFacilityTable.addCell(empanelledCell2);
+        
+        
+        
+        PdfPCell space = new PdfPCell(mainFacilityTable);
+        space.setBorder(PdfPCell.NO_BORDER);
+        space.setPaddingTop(20);
+        space.setPaddingBottom(50);
+        table.addCell(space);
+        
+        PdfPTable packagesTable = new PdfPTable(2);
+        packagesTable.setWidthPercentage(30);
+        packagesTable.getDefaultCell().setBorder(0);
+       
+        PdfPCell specialPackagesTitleCell = new PdfPCell(new Phrase("SPECIAL PACKAGES", font2));
+        specialPackagesTitleCell.setBorder(PdfPCell.NO_BORDER);
+        specialPackagesTitleCell.setColspan(2);
+        specialPackagesTitleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        
+        packagesTable.addCell(specialPackagesTitleCell);
+        packagesTable.addCell(new Phrase("1. COMPLETE BODY PROFILE :-  Rs. 600, Age >45 Yr ", smallBold));
+        packagesTable.addCell(new Phrase("2. COMPLETE BODY + THYROID PANEL :-  Rs. 850, Age >45 Yr", smallBold));
+        packagesTable.addCell(new Phrase("3. LIPID PROFILE :-  Rs. 270, Age 40 Yr ", smallBold));
+        packagesTable.addCell(new Phrase("4. RENAL + LIVER FUNCTION PANEL :-  Rs. 300, Age >40 Yr", smallBold));
+        packagesTable.addCell(new Phrase("5. ARTHRITIC PANEL :-  Rs. 250, Age >40 Yr", smallBold));
+        packagesTable.addCell(new Phrase("6. THYORID PANEL :-  Rs. 350, Age >30 Yr", smallBold));
+        packagesTable.addCell(new Phrase("7. CARDIAC PANEL :-  Rs. 1200", smallBold));
+        packagesTable.addCell(new Phrase("8. DIABETIC PANEL:-  Rs. 1000", smallBold));
+        
+        PdfPCell packagesCell = new PdfPCell(packagesTable);
+        packagesCell.setPaddingBottom(5);
+        packagesCell.setPaddingLeft(15);
+        packagesCell.setBorderWidth(0.8f);
+        table.addCell(packagesCell);
+        
+        PdfPCell footer = new PdfPCell(new Phrase("Not for Medico-Legal Purpose    " +
+        		"                                                                           " +
+        		"                            O.P.D. Timing : From 9:00am to 3:00pm", font3));
+        footer.setBorder(PdfPCell.NO_BORDER);
+        footer.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(footer);
+        
+        PdfPCell footer2 = new PdfPCell(new Phrase("Saturday : General OPD Closed, Emergency : 24x7", font4));
+        footer2.setBorder(PdfPCell.NO_BORDER);
+        footer2.setPaddingBottom(5);
+        footer2.setHorizontalAlignment(Element.ALIGN_CENTER);
+        footer2.setBackgroundColor(BaseColor.LIGHT_GRAY);
+//        
+//        PdfPCell footerWrap = new PdfPCell(footer2);
+//        footerWrap.setPaddingLeft(50);
+//        footerWrap.setPaddingRight(50);
+//        footerWrap.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(footer2);
+        
+
+		java.net.URL imgURL2 = ExamSlippdf.class
+				.getResource("/icons/footer.PNG");
+		Image image2 = Image.getInstance(imgURL2);
+		table.addCell(image2);
+		
+        
+        document.add(table);
+        document.close();
+  
+  }
+
+}

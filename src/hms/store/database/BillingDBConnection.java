@@ -460,7 +460,7 @@ public class BillingDBConnection extends DBConnection {
 	public ResultSet retrieveBillDataDetail(String bill_no) {
 
 
-		String query = "SELECT  `opd_no`, `patient_name`, `mobile_no`, `doctor_name`, `insurance_type`, `insurance_no`, `payable`, `total_amount`, `total_roundoff_amount`, `tax`, `discount`, `date`, `time` FROM `bills_entry` WHERE `bill_id`="+bill_no+" and `bill_type`='OPD'";
+		String query = "SELECT  `opd_no`, `patient_name`, `mobile_no`, `doctor_name`, `insurance_type`, `insurance_no`, `payable`, `total_amount`, `total_roundoff_amount`, `tax`, `discount`, `date`, `time`, `karuna_discount_amount` FROM `bills_entry` WHERE `bill_id`="+bill_no+" and `bill_type`='OPD'";
 		try {
 			rs = statement.executeQuery(query);
 

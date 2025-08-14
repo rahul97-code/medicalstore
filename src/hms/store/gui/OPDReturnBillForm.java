@@ -85,6 +85,7 @@ public class OPDReturnBillForm extends JDialog {
 	private JTextField MobileNoTF;
 	private JComboBox doctorNameCB;
 	private JTable table;
+	boolean isKaruna=false;
 	private Timer timer;
 	private double GovtTax=0,RestockFee=0,cuttingFee=0;
 
@@ -708,17 +709,19 @@ public class OPDReturnBillForm extends JDialog {
 				insuranceCB.setSelectedIndex(insuranceModel.getIndexOf(rs
 						.getObject(5).toString()));
 				insuranceIDTB.setText("" + rs.getObject(6).toString());
+				isKaruna=rs.getDouble(14)>0?true:false;
+				System.out.println(isKaruna);
 				//	totalAmountTF.setText("" + rs.getObject(8).toString());
 				BillData(billNo);
 
 			}
 			db.closeConnection();
 		} catch (SQLException ex) {
-
+			ex.printStackTrace();
 		}
 	}
 
-	
+
 	public void getAllinsurance() {
 		insuranceModel.addElement("Unknown");
 		InsuranceDBConnection dbConnection = new InsuranceDBConnection();
@@ -787,7 +790,7 @@ public class OPDReturnBillForm extends JDialog {
 		ItemsDBConnection itemsDBConnection = new ItemsDBConnection();
 		BatchTrackingDBConnection batchTrackingDBConnection = new BatchTrackingDBConnection();
 		BillingDBConnection billingDBConnection = new BillingDBConnection();
-//		OPDDBConnection ipddbConnection = new OPDDBConnection();
+		//		OPDDBConnection ipddbConnection = new OPDDBConnection();
 		int index=0;
 		String[] data = new String[31];
 		String[] data1=new String[5];
@@ -982,8 +985,14 @@ public class OPDReturnBillForm extends JDialog {
 				itemBatchIdV.add(rs.getString("item_batch_id"));
 				itemHsnCodeV.add(rs.getString("item_hsn_code"));
 				itemBatchV.add(rs.getString("item_batch"));
-				unitPriceV.add(rs.getString("unit_price"));
-				returnUnitPriceV.add(rs.getString("unit_price"));
+				if(isKaruna) {
+					returnUnitPriceV.add(rs.getString("new_unit_price"));
+					unitPriceV.add(rs.getString("new_unit_price"));
+				}
+				else {
+					returnUnitPriceV.add(rs.getString("unit_price"));
+					unitPriceV.add(rs.getString("unit_price"));
+				}
 				quantityV.add(rs.getString("quantity"));
 				returnQuantityV.add(rs.getString("quantity"));
 				taxPercentageV.add(rs.getDouble("tax_percentage"));

@@ -7,7 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class Developing_environment {
-	public static boolean ACTIVE=false; 
+	public static boolean ACTIVE=true; 
 	public Developing_environment() 
 	{
 
@@ -36,7 +36,7 @@ public class Developing_environment {
 	
 	public String readContent(String fileName) {
 		String content = null;
-		File file = new File(fileName); // For example, foo.txt
+		File file = new File(fileName); 
 		FileReader reader = null;
 		try {
 			reader = new FileReader(file);

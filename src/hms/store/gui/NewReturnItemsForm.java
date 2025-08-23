@@ -1192,7 +1192,7 @@ public class NewReturnItemsForm extends JDialog {
 	public void getItemBatchName(String index) {
 
 		BatchTrackingDBConnection batchTrackingDBConnection = new BatchTrackingDBConnection();
-		ResultSet resultSet = batchTrackingDBConnection.itemBatch(index);
+		ResultSet resultSet = batchTrackingDBConnection.itemBatchReturn(index);
 		itemBatchName.removeAllElements();
 		itemBatchName1.removeAllElements();
 		batchID.clear();

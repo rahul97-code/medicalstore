@@ -52,6 +52,7 @@ public class StoreMain extends JFrame {
 	public static String item_master_update_access="";
 	public static String update_item_access="";
 	public static String collection_report_access="";
+	public static String scanned_bill_access="";
 
 
 	/**

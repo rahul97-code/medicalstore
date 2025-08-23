@@ -132,6 +132,20 @@ public class BatchTrackingDBConnection extends DBConnection {
 		} 
 		return rs;
 	}
+	public ResultSet itemBatchReturn(String index)
+	{
+	  String query="SELECT `id`,`item_batch` FROM `batch_tracking` WHERE `item_id`='"+index+"' AND `item_stock`>'0' ORDER BY CAST(item_expiry AS UNSIGNED ), CAST( item_stock  AS UNSIGNED ) ASC \r\n"
+	  		+ "\r\n"
+	  		+ "";
+		System.out.println(query);
+	  try {
+			rs = statement.executeQuery(query);
+		} catch (SQLException sqle) {
+			JOptionPane.showMessageDialog(null, sqle.getMessage(), "ERROR",
+			javax.swing.JOptionPane.ERROR_MESSAGE);
+		} 
+		return rs;
+	}
 	public ResultSet itemBatch(String index)
 	{
 	  String query="SELECT `id`,`item_batch` FROM `batch_tracking` WHERE `item_id`='"+index+"' AND `item_stock`>'0' and item_expiry>ADDDATE(CURRENT_DATE(),INTERVAL 20 day)   ORDER BY CAST(item_expiry AS UNSIGNED ), CAST( item_stock  AS UNSIGNED ) ASC \r\n"

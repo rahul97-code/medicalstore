@@ -142,6 +142,21 @@ public class StoreAccountDBConnection extends DBConnection {
 		return rs;
 	}
 	
+	public boolean retrieveScannedSlipAccess(String userID)
+	{
+	  String query="SELECT scan_bill_access  FROM store_detail where store_id='"+userID+"'";
+		try {
+			rs = statement.executeQuery(query);
+			while(rs.next()) {
+				return rs.getBoolean(1);
+			}
+		} catch (SQLException sqle) {
+			JOptionPane.showMessageDialog(null, sqle.getMessage(), "ERROR",
+			javax.swing.JOptionPane.ERROR_MESSAGE);
+		} 
+		return false;
+	}
+	
 	
 	public ResultSet retrieveAllReceptionName()
 	{

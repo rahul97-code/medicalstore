@@ -5,9 +5,13 @@ import hms.opd.database.OPDDBConnection;
 import hms.patient.slippdf.MedicalStoreBillSlippdf;
 import hms.patient.slippdf.MedicalStoreIPDPdf;
 import hms.store.database.BillingDBConnection;
+import hms.store.database.StoreAccountDBConnection;
+import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbFile;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -17,7 +21,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -26,16 +34,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
@@ -50,6 +63,8 @@ import javax.swing.table.TableColumn;
 import com.itextpdf.text.DocumentException;
 import com.toedter.calendar.JDateChooser;
 import javax.swing.JCheckBox;
+import javax.swing.JTextArea;
+import javax.swing.JDesktopPane;
 
 public class BillBrowser extends JDialog {
 
@@ -66,10 +81,13 @@ public class BillBrowser extends JDialog {
 	Vector originalTableModel;
 	String userid="";
 	JCheckBox chckbxNewCheckBox;
+	private final File tempFolder = new File("temp");
+	private String selectedBillId;
+	private JList ViewList;
 
 	public static void main(String[] arg)
 	{
-		BillBrowser billBrowser=new BillBrowser(null,"","");
+		BillBrowser billBrowser=new BillBrowser(null,"3","");
 		billBrowser.setVisible(true);
 
 	}
@@ -78,21 +96,21 @@ public class BillBrowser extends JDialog {
 	 */
 	public BillBrowser(final JFrame owner,final String Userid,String type) {
 		//		this.userid=Userid;
-		 super(owner, "Bill Entry List", false);
+		super(owner, "Bill Entry List", false);
 		setResizable(false);
 		//		System.out.println(Userid+"userid");
 		setIconImage(Toolkit.getDefaultToolkit().getImage(BillBrowser.class.getResource("/icons/rotaryLogo.png")));
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 950, 524);
+		setBounds(100, 100, 961, 541);
 		contentPane = new JPanel();
-//		setModal(true);
+		//		setModal(true);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setEnabled(false);
-		scrollPane.setBounds(198, 11, 726, 418);
+		scrollPane.setBounds(209, 11, 726, 418);
 		contentPane.add(scrollPane);
 
 		lblTotalamountlb = new JLabel("");
@@ -100,7 +118,7 @@ public class BillBrowser extends JDialog {
 			lblTotalamountlb.hide();
 		}
 		lblTotalamountlb.setFont(new Font("Tahoma", Font.BOLD, 14));
-		lblTotalamountlb.setBounds(825, 440, 137, 25);
+		lblTotalamountlb.setBounds(825, 440, 99, 25);
 		contentPane.add(lblTotalamountlb);
 
 		billbrowserTable = new JTable();
@@ -145,6 +163,11 @@ public class BillBrowser extends JDialog {
 
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
+				int selectedRow = billbrowserTable.getSelectedRow();
+				if (selectedRow != -1) {
+					((DefaultListModel<?>) ViewList.getModel()).clear();
+					selectedBillId = billbrowserTable.getValueAt(selectedRow, 0).toString();
+				}
 				// TODO Auto-generated method stub
 				if (arg0.getClickCount() == 2) {
 					try {
@@ -165,33 +188,37 @@ public class BillBrowser extends JDialog {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
+
+
+
+
 				}
 			}
 		});
-		
+
 		addMouseListener(new MouseAdapter() {
-		    @Override
-		    public void mousePressed(MouseEvent e) {
-		        setAlwaysOnTop(true);
-		        toFront();
-		        requestFocus();
-		        setAlwaysOnTop(false);
-		    }
+			@Override
+			public void mousePressed(MouseEvent e) {
+				setAlwaysOnTop(true);
+				toFront();
+				requestFocus();
+				setAlwaysOnTop(false);
+			}
 		});
 
-		
-		JButton btnNewButton = new JButton("New Bill");
+
+		JButton btnNewButton = new JButton("OPD Billing");
 		btnNewButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				OPDBillEntry opdEntery=new OPDBillEntry(owner,BillBrowser.this);
-//				opdEntery.setModal(true);
+				//				opdEntery.setModal(true);
 				opdEntery.setVisible(true);
 			}
 		});
 		btnNewButton.setIcon(new ImageIcon(BillBrowser.class.getResource("/icons/Business.png")));
 		btnNewButton.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		btnNewButton.setBounds(33, 440, 160, 35);
+		btnNewButton.setBounds(208, 446, 119, 35);
 		contentPane.add(btnNewButton);
 
 		JButton btnNewButton_1 = new JButton("Close");
@@ -203,12 +230,12 @@ public class BillBrowser extends JDialog {
 		});
 		btnNewButton_1.setIcon(new ImageIcon(BillBrowser.class.getResource("/icons/CANCEL.PNG")));
 		btnNewButton_1.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		btnNewButton_1.setBounds(550, 440, 160, 35);
+		btnNewButton_1.setBounds(629, 446, 112, 35);
 		contentPane.add(btnNewButton_1);
 
 		JPanel panel = new JPanel();
 		panel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel.setBounds(4, 11, 192, 418);
+		panel.setBounds(4, 11, 192, 483);
 		contentPane.add(panel);
 		panel.setLayout(null);
 		searchPatientNameTB = new JTextField();
@@ -368,18 +395,118 @@ public class BillBrowser extends JDialog {
 		lblSelectSex.setFont(new Font("Tahoma", Font.PLAIN, 12));
 
 		JButton btnNewButton_2 = new JButton("Search");
+		btnNewButton_2.setBounds(6, 329, 89, 35);
+		panel.add(btnNewButton_2);
 		btnNewButton_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 			}
 		});
-		btnNewButton_2.setBounds(36, 326, 111, 35);
-		panel.add(btnNewButton_2);
 		btnNewButton_2.setIcon(new ImageIcon(BillBrowser.class.getResource("/icons/zoom_r_button.png")));
-		btnNewButton_2.setFont(new Font("Tahoma", Font.PLAIN, 12));
+		btnNewButton_2.setFont(new Font("Tahoma", Font.PLAIN, 11));
+
+		JPanel ViewListPanel = new JPanel();
+		ViewListPanel.setBorder(new TitledBorder(null, "Scanned Files", TitledBorder.LEFT, TitledBorder.TOP, null, null));
+		ViewListPanel.setBounds(6, 375, 182, 97);
+		panel.add(ViewListPanel);
+		ViewListPanel.setLayout(null);
+
+		// Create JList
+		ViewList = new JList();
+		ViewList.setBounds(10, 21, 162, 65);
+		ViewListPanel.add(ViewList);
+		ViewList.setToolTipText("Double Click To Open File");
+		ViewList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		ViewList.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		// Add mouse listener for double-click
+		DefaultListModel<File> model = new DefaultListModel<>();
+		ViewList.setModel(model); // Attach model to ViewList
+
+		// Show only the file name in the JList
+		ViewList.setCellRenderer(new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+					boolean isSelected, boolean cellHasFocus) {
+				if (value instanceof File) {
+					value = ((File) value).getName(); // Show only the name
+				}
+				return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+			}
+		});
+		ViewList.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					int index = ViewList.locationToIndex(e.getPoint());
+					if (index >= 0) {
+						Object selectedItem = ViewList.getModel().getElementAt(index);
+
+						if (selectedItem instanceof File) {
+							File fileToOpen = (File) selectedItem;
+
+							System.out.println("Trying to open: " + fileToOpen.getAbsolutePath());
+
+							if (fileToOpen.exists()) {
+								try {
+									if (Desktop.isDesktopSupported()) {
+										Desktop.getDesktop().open(fileToOpen);
+									} else {
+										JOptionPane.showMessageDialog(null, "Desktop not supported.");
+									}
+								} catch (IOException ex) {
+									JOptionPane.showMessageDialog(null, "Unable to open file: " + ex.getMessage());
+								}
+							} else {
+								JOptionPane.showMessageDialog(null, "File does not exist.");
+							}
+						}
+					}
+				}
+			}
+		});
+
+		JButton btnPdfView = new JButton("Pdf View");
+
+		btnPdfView.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		btnPdfView.setBounds(100, 330, 82, 35);
+		panel.add(btnPdfView);
+		btnPdfView.setEnabled(false);
+		btnPdfView.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				if (selectedBillId == null || selectedBillId.isEmpty()) {
+					JOptionPane.showMessageDialog(null, "Please select a row first.");
+					return;
+				}
+				clearTempFolder();
+				downloadSMBFiles(selectedBillId);
+			}
+		});
+		if(new StoreAccountDBConnection().retrieveScannedSlipAccess(Userid) || StoreMain.update_item_access.equals("1")) {
+			btnPdfView.setEnabled(true);
+		}else {
+			btnPdfView.setEnabled(false);
+		}
+
+		JLabel lblTotal = new JLabel("Total :");
+		lblTotal.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblTotal.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblTotal.setBounds(751, 440, 64, 25);
+		contentPane.add(lblTotal);
+
+		JButton btnIpdBilling = new JButton("IPD Billing");
+		btnIpdBilling.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				IPDBillEntry opdEntery=new IPDBillEntry(owner,BillBrowser.this,null,"",false,"","");
+				//				opdEntery.setModal(true);
+				opdEntery.setVisible(true);
+			}
+		});
+		btnIpdBilling.setFont(new Font("Tahoma", Font.PLAIN, 12));
+		btnIpdBilling.setBounds(354, 446, 119, 35);
+		contentPane.add(btnIpdBilling);
 
 		JButton btnExcel = new JButton("Excel");
-		btnExcel.setBounds(36, 372, 101, 35);
-		panel.add(btnExcel);
+		btnExcel.setBounds(499, 446, 110, 35);
+		contentPane.add(btnExcel);
 		btnExcel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 
@@ -393,40 +520,6 @@ public class BillBrowser extends JDialog {
 		});
 		btnExcel.setIcon(new ImageIcon(BillBrowser.class.getResource("/icons/1BL.PNG")));
 		btnExcel.setFont(new Font("Tahoma", Font.PLAIN, 12));
-
-
-		JLabel lblTotal = new JLabel("Total :");
-		lblTotal.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblTotal.setFont(new Font("Tahoma", Font.BOLD, 14));
-		lblTotal.setBounds(712, 440, 103, 25);
-		contentPane.add(lblTotal);
-
-		JButton button = new JButton("New Bill 2");
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-
-				OPDBillEntry opdEntery=new OPDBillEntry(owner,BillBrowser.this);
-//				opdEntery.setModal(true);
-				opdEntery.setVisible(true);
-			}
-		});
-		button.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		button.setBounds(203, 440, 160, 35);
-		contentPane.add(button);
-
-		JButton btnIpdBilling = new JButton("IPD Billing");
-		btnIpdBilling.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				IPDBillEntry opdEntery=new IPDBillEntry(owner,BillBrowser.this,null,"",false,"","");
-//				opdEntery.setModal(true);
-				opdEntery.setVisible(true);
-			}
-		});
-		btnIpdBilling.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		btnIpdBilling.setBounds(380, 440, 160, 35);
-		contentPane.add(btnIpdBilling);
-
-
 		populateTable1(DateFormatChange.StringToMysqlDate(new Date()),DateFormatChange.StringToMysqlDate(new Date()),userid);
 	}
 
@@ -537,6 +630,66 @@ public class BillBrowser extends JDialog {
 			}
 		}
 	}
+
+	private void clearTempFolder() {
+		if (tempFolder.exists()) {
+			File[] files = tempFolder.listFiles();
+			if (files != null) {
+				for (int i = 0; i < files.length; i++) {
+					files[i].delete();
+				}
+			}
+		} else {
+			tempFolder.mkdir();
+		}
+	}
+
+	private void downloadSMBFiles(String billId) {
+		DefaultListModel<File> model = new DefaultListModel<>();
+		ViewList.setModel(model); // Attach model to ViewList
+
+		if (!tempFolder.exists()) {
+			tempFolder.mkdirs(); // Create temp folder if it doesn't exist
+		}
+
+		String smbPath = "smb://192.168.1.138/data/MS/ScannedBillSlips/" + billId + "/";
+
+		try {
+			NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "hospital", "rotaryhospital");
+			SmbFile dir = new SmbFile(smbPath, auth);
+
+			if (dir.exists() && dir.isDirectory()) {
+				SmbFile[] files = dir.listFiles();
+
+				for (SmbFile smbFile : files) {
+					File localFile = new File(tempFolder, smbFile.getName());
+
+					try (InputStream in = smbFile.getInputStream();
+							OutputStream out = new FileOutputStream(localFile)) {
+
+						byte[] buffer = new byte[4096];
+						int len;
+						while ((len = in.read(buffer)) > 0) {
+							out.write(buffer, 0, len);
+						}
+
+						model.addElement(localFile); // Add actual file object
+					} catch (IOException ioEx) {
+						ioEx.printStackTrace();
+						JOptionPane.showMessageDialog(null, "Error downloading: " + smbFile.getName());
+					}
+				}
+
+			} else {
+				JOptionPane.showMessageDialog(null, "File not found.");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Error connecting to SMB share.");
+		}
+	}
+
+
 	public void populateTable1(String dateFrom,String dateTo,String userid)
 	{
 		System.out.println("1pop");

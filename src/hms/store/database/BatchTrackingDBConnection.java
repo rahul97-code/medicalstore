@@ -160,6 +160,30 @@ public class BatchTrackingDBConnection extends DBConnection {
 		} 
 		return rs;
 	}
+	
+	public ResultSet getUsersBatchNames(String index,String userID)
+	{
+	  String query="SELECT\r\n"
+	  		+ "	(sum(qty)-\r\n"
+	  		+ "	COALESCE((SELECT sum(quantity) from bill_items bi where bi.user_id=iam.issued_to_id and bi.item_id =iam.item_id and bi.item_batch_id=iam.batch_id  and bi.`date` >=date(iam.date_time))\r\n"
+	  		+ "	,0))as qty,\r\n"
+	  		+ "	batch_id ,\r\n"
+	  		+ "	batch_name,\r\n"
+	  		+ "	expiry_date\r\n"
+	  		+ "	FROM\r\n"
+	  		+ "	items_audit_master iam\r\n"
+	  		+ "where\r\n"
+	  		+ "	issued_to_id = '"+userID+"' and item_id ='"+index+"'\r\n"
+	  		+ "GROUP by batch_id 	";
+		System.out.println(query);
+	  try {
+			rs = statement.executeQuery(query);
+		} catch (SQLException sqle) {
+			JOptionPane.showMessageDialog(null, sqle.getMessage(), "ERROR",
+			javax.swing.JOptionPane.ERROR_MESSAGE);
+		} 
+		return rs;
+	}
 	public ResultSet itemBatch(String index,String batchName)
 	{
 	  String query="SELECT  `id`,`item_batch` FROM `batch_tracking` WHERE `item_batch` LIKE '%"+batchName+"%' AND `item_id`='"+index+"' AND `item_stock`>'0' ORDER BY `item_expiry` ASC";

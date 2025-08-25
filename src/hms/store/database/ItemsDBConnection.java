@@ -727,6 +727,19 @@ public class ItemsDBConnection extends DBConnection {
 		preparedStatement.setString(1, rowID);
 		preparedStatement.executeUpdate();
 	}
+	public void insertDataToAudit(String[] data) throws Exception {
+	    String insertSQL = "INSERT INTO items_audit_master (" +
+	            "qty, issued_by_id, issued_by, issued_to, issued_to_id, entry_type, " +
+	            "date_time, item_id, item_name, batch_id, batch_name, remarks, current_batch_qty,expiry_date) " +
+	            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	    PreparedStatement preparedStatement = connection.prepareStatement(insertSQL);
+
+	    for (int i = 1; i <= 14; i++) {
+	        preparedStatement.setString(i, data[i - 1]);
+	    }
+
+	    preparedStatement.executeUpdate();
+	}
 
 	public void inserData(String[] data) throws Exception {
 		String insertSQL = "INSERT INTO `items_detail`(`item_name`,`item_code`, `item_desc`, `item_brand`, `item_hsn_code`, `item_treatment`, `item_lab`, `item_surgery`, `item_drug`, `item_imaging`, `item_inpatient`, `item_medic_income`, `item_category`,`item_category_name`, `item_meas_unit`, `item_location`, `item_type`, `item_tax_type`, `item_tax_value`, `item_surcharge`,`item_igst`,`item_purchase_price`, `item_selling_price`, `item_total_stock`, `item_mrp`, `item_minimum_units`, `item_status`, `item_expiry_date`, `item_date`, `item_time`, `item_entry_user`,`item_maximum_units`,`item_reoder_level`,`item_salt_name`,`item_text1`, `item_text2`, `item_text3`, `item_text4`,`item_risk_type`,`doctor_refrence`) VALUES  (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";

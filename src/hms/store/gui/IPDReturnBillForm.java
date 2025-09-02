@@ -390,7 +390,6 @@ public class IPDReturnBillForm extends JDialog {
 			public void keyTyped(KeyEvent e) {
 				char vChar = e.getKeyChar();
 				int key = e.getKeyCode();
-
 				if (!(Character.isDigit(vChar)
 						|| (vChar == KeyEvent.VK_BACK_SPACE) || (vChar == KeyEvent.VK_DELETE))) {
 
@@ -401,9 +400,6 @@ public class IPDReturnBillForm extends JDialog {
 		});
 
 		timer = new Timer(700, new ActionListener() {
-
-
-
 			public void actionPerformed(ActionEvent e) {
 				// highlightAll();
 				timer.stop();
@@ -420,7 +416,6 @@ public class IPDReturnBillForm extends JDialog {
 					clearAllVectors();
 					loadDataToTable();
 				}
-
 			}
 
 
@@ -818,7 +813,6 @@ public class IPDReturnBillForm extends JDialog {
 								JOptionPane.ERROR_MESSAGE);
 						return false;
 					}
-
 					double rp=unitPrice*issuedQty;
 					rp=formula.addGst(rp, taxPercentageV.get(count), surchargePercentageV.get(count));
 					totalSurchargeAmount=totalSurchargeAmount+formula.getSgstValue();
@@ -829,7 +823,6 @@ public class IPDReturnBillForm extends JDialog {
 					returnTotalValueV.set(count,String.valueOf(roundPrice(-rp)));
 					returnQuantityV.set(count, -issuedQty + ""); 
 				} else {
-
 					JOptionPane.showMessageDialog(null, "Please check Qunatity and Checkboxes!", "Input Error",
 							JOptionPane.ERROR_MESSAGE);
 					return false;
@@ -884,6 +877,7 @@ public class IPDReturnBillForm extends JDialog {
 		try {
 			System.out.println(Arrays.toString(data));
 			index = billingDBConnection.inserBillEntry(data);
+			if(index==0)return;
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

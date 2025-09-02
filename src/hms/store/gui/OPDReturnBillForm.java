@@ -827,6 +827,7 @@ public class OPDReturnBillForm extends JDialog {
 		try {
 			System.out.println(Arrays.toString(data));
 			index = billingDBConnection.inserBillEntry(data);
+			if(index==0)return;
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

@@ -613,9 +613,6 @@ public class OPDBillEntry extends JDialog implements KeyListener {
 		btnNewButton_1.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
-			
-
 				if (patientNameTF.getText().toString().equals("")) {
 					JOptionPane.showMessageDialog(null,
 							"Please enter person name", "Input Error",
@@ -700,6 +697,7 @@ public class OPDBillEntry extends JDialog implements KeyListener {
 				data[22] =null;
 				try {
 					index = billingDBConnection.inserOPDBillEntry(data);
+					if(index==0)return;
 					billingDBConnection.updateReturnBillId(index, index);
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block

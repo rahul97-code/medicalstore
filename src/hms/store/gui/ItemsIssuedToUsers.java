@@ -458,9 +458,7 @@ public class ItemsIssuedToUsers extends JDialog {
 				itemBatchV.add(itemBatchNameSTR);
 				itemPriceV.add(price + "");
 				totalPriceV.add(itemValue+"");
-
 				issuedQtyV.add(qtyIssued + "");
-
 				consumableV.add(chckbxConsumable.isSelected() ? "Yes" : "No");
 				expiryDateV.add(expiryDateSTR);
 				lastBatchQtyV.add(batchQtyTF.getText());

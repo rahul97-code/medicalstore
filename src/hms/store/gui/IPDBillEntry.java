@@ -713,6 +713,7 @@ public class IPDBillEntry extends JDialog implements KeyListener {
 
 				try {
 					index = billingDBConnection.inserBillEntry(data);
+					if(index==0)return;
 					billingDBConnection.updateReturnBillId(index, index);
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
